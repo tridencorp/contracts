@@ -3,9 +3,11 @@ pragma solidity ^0.8.20;
 
 contract TridenToken {
   event Transfer(address indexed from, address indexed to, uint256 value);
+  event Approval(address indexed owner, address indexed spender, uint256 value);
 
   mapping(address account => uint256) private _balances;
-  
+  mapping(address => mapping(address => uint256)) private _allowances;
+
   address public owner;
   uint256 private _totalSupply;
 
@@ -64,5 +66,32 @@ contract TridenToken {
 
     _balances[owner] -= value;
     _totalSupply -= value;
+  }
+
+  // Returns allowance for given sender/spender pair.
+  function allowance(address sender, address spender) public view virtual returns (uint256) {
+    return _allowances[sender][spender];
+  }
+
+  // Approves allowance for given spender. 
+  function approve(address spender, uint256 amount) external returns (bool) {
+    _allowances[msg.sender][spender] = amount;
+
+    emit Approval(msg.sender, spender, amount);
+    return true;
+  }
+
+  // Transfers allowance.
+  function transferFrom(address sender, address to, uint256 amount) external returns (bool) {
+      require(_allowances[sender][msg.sender] >= amount, "Not enough allowance");
+      require(_balances[sender] >= amount, "Not enough tokens");
+
+      _allowances[sender][msg.sender] -= amount;
+
+      _balances[sender] -= amount;
+      _balances[to] += amount;
+
+      emit Transfer(sender, to, amount);
+      return true;
   }
 }
