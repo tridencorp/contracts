@@ -6,7 +6,12 @@ contract TridenToken {
 
   mapping(address account => uint256) private _balances;
   
+  address public owner;
   uint256 private _totalSupply;
+
+  constructor() {
+    owner = msg.sender;
+  }
 
   // Returns token name.
   function name() public pure returns (string memory) {
@@ -25,7 +30,7 @@ contract TridenToken {
 
   // Returns contract total supply.
   function totalSupply() public view returns (uint256) {
-      return _totalSupply;
+    return _totalSupply;
   }
 
   // Returns balance of give address.
@@ -40,5 +45,19 @@ contract TridenToken {
 
     emit Transfer(msg.sender, to, value);
     return true;
+  }
+
+  // Mints new tokens.
+  function _mint(uint256 value) external {
+    require(msg.sender == owner, "You are not the owner");
+    _totalSupply += value;
+  }
+
+  // Burns our tokens.
+  function _burn(uint256 value) external {
+    require(msg.sender == owner, "You are not the owner");
+    require(_totalSupply >= value, "Not enough tokens to burn");
+
+    _totalSupply -= value;
   }
 }
