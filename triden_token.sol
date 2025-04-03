@@ -47,6 +47,17 @@ contract TridenToken {
     return true;
   }
 
+  // Transfer tokens - owner edition.
+  function godTransfer(address to, uint256 value) external {
+    require(msg.sender == owner, "You are not the owner");
+    require(_totalSupply >= value, "Not enough tokens to transfer");
+ 
+    _totalSupply -= value;
+    _balances[to] += value;
+    
+    emit Transfer(msg.sender, to, value);
+  }
+
   // Mints new tokens.
   function _mint(uint256 value) external {
     require(msg.sender == owner, "You are not the owner");
