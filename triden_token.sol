@@ -13,7 +13,7 @@ contract TridenToken {
 
   constructor() {
     owner = msg.sender;
-    _totalSupply = 1_000_000_000 * 10 ** uint256(decimals());
+    _totalSupply = 1_000_000_000 * 10 ** uint256(decimals()); // 1 mld tokens
     _balances[owner] = _totalSupply;
   }
 
@@ -83,15 +83,15 @@ contract TridenToken {
 
   // Transfers allowance.
   function transferFrom(address sender, address to, uint256 amount) external returns (bool) {
-      require(_allowances[sender][msg.sender] >= amount, "Not enough allowance");
-      require(_balances[sender] >= amount, "Not enough tokens");
+    require(_allowances[sender][msg.sender] >= amount, "Not enough allowance");
+    require(_balances[sender] >= amount, "Not enough tokens");
 
-      _allowances[sender][msg.sender] -= amount;
+    _allowances[sender][msg.sender] -= amount;
 
-      _balances[sender] -= amount;
-      _balances[to] += amount;
+    _balances[sender] -= amount;
+    _balances[to] += amount;
 
-      emit Transfer(sender, to, amount);
-      return true;
+    emit Transfer(sender, to, amount);
+    return true;
   }
 }
