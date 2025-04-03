@@ -11,6 +11,8 @@ contract TridenToken {
 
   constructor() {
     owner = msg.sender;
+    _totalSupply = 1_000_000_000 * 10 ** uint256(decimals());
+    _balances[owner] = _totalSupply;
   }
 
   // Returns token name.
@@ -35,7 +37,7 @@ contract TridenToken {
 
   // Returns balance of give address.
   function balanceOf(address account) public view returns (uint256) {
-      return _balances[account];
+    return _balances[account];
   }
 
   // Transfer tokens to given address.
@@ -47,28 +49,20 @@ contract TridenToken {
     return true;
   }
 
-  // Transfer tokens - owner edition.
-  function godTransfer(address to, uint256 value) external {
-    require(msg.sender == owner, "You are not the owner");
-    require(_totalSupply >= value, "Not enough tokens to transfer");
- 
-    _totalSupply -= value;
-    _balances[to] += value;
-    
-    emit Transfer(msg.sender, to, value);
-  }
-
   // Mints new tokens.
   function _mint(uint256 value) external {
     require(msg.sender == owner, "You are not the owner");
+
+    _balances[owner] += value;
     _totalSupply += value;
   }
 
   // Burns our tokens.
   function _burn(uint256 value) external {
     require(msg.sender == owner, "You are not the owner");
-    require(_totalSupply >= value, "Not enough tokens to burn");
+    require(_balances[owner] >= value, "Not enough tokens to burn");
 
+    _balances[owner] -= value;
     _totalSupply -= value;
   }
 }
