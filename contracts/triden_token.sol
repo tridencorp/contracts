@@ -43,11 +43,14 @@ contract TridenToken {
   }
 
   // Transfer tokens to given address.
-  function transfer(address to, uint256 value) public returns (bool) {
-    _balances[msg.sender] -= value;
-    _balances[to] += value;
+  function transfer(address to, uint256 amount) public returns (bool) {
+    require(_balances[msg.sender] >= amount, "Not enough tokens");
+    require(to != address(0), "Recipient cannot be zero address");
 
-    emit Transfer(msg.sender, to, value);
+    _balances[msg.sender] -= amount;
+    _balances[to] += amount;
+
+    emit Transfer(msg.sender, to, amount);
     return true;
   }
 
@@ -85,6 +88,7 @@ contract TridenToken {
   function transferFrom(address sender, address to, uint256 amount) external returns (bool) {
     require(_allowances[sender][msg.sender] >= amount, "Not enough allowance");
     require(_balances[sender] >= amount, "Not enough tokens");
+    require(to != address(0), "Recipient cannot be zero address");
 
     _allowances[sender][msg.sender] -= amount;
 
