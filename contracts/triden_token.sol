@@ -81,7 +81,7 @@ contract TridenToken {
     return true;
   }
 
-  // Transfers allowance.
+  // Transfer allowance.
   function transferFrom(address sender, address to, uint256 amount) external returns (bool) {
     require(_allowances[sender][msg.sender] >= amount, "Not enough allowance");
     require(_balances[sender] >= amount, "Not enough tokens");
