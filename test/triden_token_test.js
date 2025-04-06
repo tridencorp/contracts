@@ -33,9 +33,7 @@ describe("SimpleERC20", function () {
 
   it("shouldn't allow to transfer more than available balance", async function () {
     let balance = await token.balanceOf(owner.address);
-
-    balance += 1n;
-    await expect(token.transfer(recipient.address, balance)).to.be.reverted;
+    await expect(token.transfer(recipient.address, balance + 1n)).to.be.reverted;
   });
 
   it("shouldn't transfer tokens without previous approval", async function () {
@@ -72,6 +70,11 @@ describe("SimpleERC20", function () {
   
     expect(await token.totalSupply()).to.equal(supply + amount);
     expect(await token.balanceOf(owner.address)).to.equal(balance + amount);
+  });
+
+  it("should allow to set new owner", async function () {
+    await token.transferOwnership(recipient.address);
+    expect(await token.owner()).to.equal(recipient.address);
   });
 
   it("should allow owner to burn tokens", async function () {

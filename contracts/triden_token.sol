@@ -8,13 +8,13 @@ contract TridenToken {
   mapping(address account => uint256) private _balances;
   mapping(address => mapping(address => uint256)) private _allowances;
 
-  address public owner;
+  address private _owner;
   uint256 private _totalSupply;
 
   constructor() {
-    owner = msg.sender;
+    _owner = msg.sender;
     _totalSupply = 5_000_000_000 * (10 ** uint256(decimals()));
-    _balances[owner] = _totalSupply;
+    _balances[_owner] = _totalSupply;
   }
 
   // Returns token name.
@@ -32,6 +32,11 @@ contract TridenToken {
     return 18;
   }
 
+  // Returns owner.
+  function owner() public view returns (address) {
+    return _owner;
+  }
+
   // Returns contract total supply.
   function totalSupply() public view returns (uint256) {
     return _totalSupply;
@@ -42,7 +47,15 @@ contract TridenToken {
     return _balances[account];
   }
 
-  // Transfer tokens to given address.
+  // Transfers contract ownership.
+  function transferOwnership(address newOwner) external {
+    require(newOwner != address(0), "New owner cannot be zero address");
+    require(msg.sender == _owner, "You are not the owner");
+
+    _owner = newOwner;
+  }
+
+  // Transfer tokens.
   function transfer(address to, uint256 amount) public returns (bool) {
     require(to != address(0), "Recipient cannot be zero address");
 
@@ -55,17 +68,19 @@ contract TridenToken {
 
   // Mints new tokens.
   function mint(uint256 value) external {
-    require(msg.sender == owner, "You are not the owner");
+    require(msg.sender == _owner, "You are not the owner");
 
-    _balances[owner] += value;
+    _balances[_owner] += value;
     _totalSupply += value;
+
+    emit Transfer(address(0), _owner, value);
   }
 
   // Burns our tokens.
   function burn(uint256 value) external {
-    require(msg.sender == owner, "You are not the owner");
-
-    _balances[owner] -= value;
+    require(msg.sender == _owner, "You are not the owner");
+    
+    _balances[_owner] -= value;
     _totalSupply -= value;
   }
 
