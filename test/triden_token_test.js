@@ -1,6 +1,5 @@
 const { ethers } = require("hardhat");
 const { expect } = require("chai");
-const { NomicLabsHardhatPluginError } = require("hardhat/plugins");
 
 describe("SimpleERC20", function () {
   let token;
@@ -27,10 +26,27 @@ describe("SimpleERC20", function () {
     expect(await token.balanceOf(recipient.address)).to.equal(transferAmount);
   });
 
-  it("should not allow to transfer more than available balance", async function () {
+  it("shouldn't allow to transfer more than available balance", async function () {
     let balance = await token.balanceOf(owner.address);
 
     balance += 1n;
     await expect(token.transfer(recipient.address, balance)).to.be.reverted;
+  });
+
+  it("shouldn't transfer tokens without previous approval", async function () {
+    const amount = ethers.parseUnits("1", 18);
+    await expect(token.connect(recipient).transferFrom(owner.address, hacker.address, amount)).to.be.reverted;
+  });
+
+  it("should transferFrom only approved tokens", async function () {
+    const balance = await token.balanceOf(owner.address);
+    const amount = ethers.parseUnits("1", 18);
+
+    await token.approve(recipient.address, amount);
+    await token.connect(recipient).transferFrom(owner.address, hacker.address, amount);
+
+    expect(await token.balanceOf(hacker.address)).to.equal(amount);
+    expect(await token.balanceOf(owner.address)).to.equal(balance - amount);
+    expect(await token.allowance(owner.address, recipient.address)).to.equal(0);
   });
 });
