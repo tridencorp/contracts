@@ -70,7 +70,7 @@ contract TridenToken {
   }
 
   // Returns allowance for given sender/spender pair.
-  function allowance(address sender, address spender) public view virtual returns (uint256) {
+  function allowance(address sender, address spender) public view returns (uint256) {
     return _allowances[sender][spender];
   }
 

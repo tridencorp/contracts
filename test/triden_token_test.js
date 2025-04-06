@@ -15,6 +15,11 @@ describe("SimpleERC20", function () {
     token = await TridenToken.deploy();
     await token.waitForDeployment();
   });
+  
+  it("should initialize correctly", async function () {
+      expect(await token.totalSupply()).to.equal(ethers.parseUnits("5000000000", 18));
+      expect(await token.balanceOf(owner.address)).to.equal(ethers.parseUnits("5000000000", 18));
+  });
 
   it("should transfer tokens successfully", async function () {
     const initialOwnerBalance = await token.balanceOf(owner.address);
