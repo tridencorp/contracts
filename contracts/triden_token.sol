@@ -13,7 +13,7 @@ contract TridenToken {
 
   constructor() {
     owner = msg.sender;
-    _totalSupply = 3_000_000_000 * (10 ** uint256(decimals()));
+    _totalSupply = 5_000_000_000 * (10 ** uint256(decimals()));
     _balances[owner] = _totalSupply;
   }
 
@@ -54,7 +54,7 @@ contract TridenToken {
   }
 
   // Mints new tokens.
-  function _mint(uint256 value) external {
+  function mint(uint256 value) external {
     require(msg.sender == owner, "You are not the owner");
 
     _balances[owner] += value;
@@ -62,7 +62,7 @@ contract TridenToken {
   }
 
   // Burns our tokens.
-  function _burn(uint256 value) external {
+  function burn(uint256 value) external {
     require(msg.sender == owner, "You are not the owner");
 
     _balances[owner] -= value;

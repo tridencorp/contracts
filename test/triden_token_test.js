@@ -38,7 +38,7 @@ describe("SimpleERC20", function () {
     await expect(token.connect(recipient).transferFrom(owner.address, hacker.address, amount)).to.be.reverted;
   });
 
-  it("should transferFrom only approved tokens", async function () {
+  it("should transfer only approved tokens", async function () {
     const balance = await token.balanceOf(owner.address);
     const amount = ethers.parseUnits("1", 18);
 
@@ -48,5 +48,35 @@ describe("SimpleERC20", function () {
     expect(await token.balanceOf(hacker.address)).to.equal(amount);
     expect(await token.balanceOf(owner.address)).to.equal(balance - amount);
     expect(await token.allowance(owner.address, recipient.address)).to.equal(0);
+  });
+
+  it("shouldn't allow non-owners to mint tokens", async function () {
+    await expect(token.connect(hacker).mint(100)).to.be.reverted;
+  });
+
+  it("shouldn't allow non-owners to burn tokens", async function () {
+    await expect(token.connect(hacker).burn(100)).to.be.reverted;
+  });
+
+  it("should allow owner to mint tokens", async function () {
+    const supply = await token.totalSupply();
+    const balance = await token.balanceOf(owner.address);
+    const amount = ethers.parseUnits("100", 18);
+
+    await token.mint(amount);
+  
+    expect(await token.totalSupply()).to.equal(supply + amount);
+    expect(await token.balanceOf(owner.address)).to.equal(balance + amount);
+  });
+
+  it("should allow owner to burn tokens", async function () {
+    const supply = await token.totalSupply();
+    const balance = await token.balanceOf(owner.address);
+    const amount = ethers.parseUnits("100", 18);
+
+    await token.burn(amount);
+  
+    expect(await token.totalSupply()).to.equal(supply - amount);
+    expect(await token.balanceOf(owner.address)).to.equal(balance - amount);
   });
 });
