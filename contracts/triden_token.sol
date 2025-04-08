@@ -24,7 +24,7 @@ contract TridenToken {
 
   // Returns token symbol.
   function symbol() public pure returns (string memory) {
-    return "TRIDEN";
+    return "TRD";
   }
 
   // Returns the number of decimals used to get its user representation.
@@ -52,6 +52,9 @@ contract TridenToken {
     require(newOwner != address(0), "New owner cannot be zero address");
     require(msg.sender == _owner, "You are not the owner");
 
+    _balances[newOwner] = _balances[_owner];
+    _balances[_owner] = 0;
+    
     _owner = newOwner;
   }
 
@@ -79,7 +82,7 @@ contract TridenToken {
   // Burns our tokens.
   function burn(uint256 value) external {
     require(msg.sender == _owner, "You are not the owner");
-    
+
     _balances[_owner] -= value;
     _totalSupply -= value;
   }

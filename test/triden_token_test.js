@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 const { expect } = require("chai");
 
-describe("SimpleERC20", function () {
+describe("TridenToken", function () {
   let token;
   let owner;
   let recipient;
@@ -53,38 +53,47 @@ describe("SimpleERC20", function () {
     expect(await token.allowance(owner.address, recipient.address)).to.equal(0);
   });
 
-  it("shouldn't allow non-owners to mint tokens", async function () {
-    await expect(token.connect(hacker).mint(100)).to.be.reverted;
+  describe("hacker", function () {
+    it("is not allow to mint tokens", async function () {
+      await expect(token.connect(hacker).mint(100)).to.be.reverted;
+    });
+
+    it("is not allow to burn tokens", async function () {
+      await expect(token.connect(hacker).burn(100)).to.be.reverted;
+    });  
   });
 
-  it("shouldn't allow non-owners to burn tokens", async function () {
-    await expect(token.connect(hacker).burn(100)).to.be.reverted;
-  });
+  describe("owner", function () {
+    it("is allow to burn tokens", async function () {
+      const supply = await token.totalSupply();
+      const balance = await token.balanceOf(owner.address);
+      const amount = ethers.parseUnits("100", 18);
 
-  it("should allow owner to mint tokens", async function () {
-    const supply = await token.totalSupply();
-    const balance = await token.balanceOf(owner.address);
-    const amount = ethers.parseUnits("100", 18);
+      await token.burn(amount);
+    
+      expect(await token.totalSupply()).to.equal(supply - amount);
+      expect(await token.balanceOf(owner.address)).to.equal(balance - amount);
+    });
 
-    await token.mint(amount);
-  
-    expect(await token.totalSupply()).to.equal(supply + amount);
-    expect(await token.balanceOf(owner.address)).to.equal(balance + amount);
-  });
+    it("is allow to mint tokens", async function () {
+      const supply = await token.totalSupply();
+      const balance = await token.balanceOf(owner.address);
+      const amount = ethers.parseUnits("100", 18);
 
-  it("should allow to set new owner", async function () {
-    await token.transferOwnership(recipient.address);
-    expect(await token.owner()).to.equal(recipient.address);
-  });
+      await token.mint(amount);
+    
+      expect(await token.totalSupply()).to.equal(supply + amount);
+      expect(await token.balanceOf(owner.address)).to.equal(balance + amount);
+    });
 
-  it("should allow owner to burn tokens", async function () {
-    const supply = await token.totalSupply();
-    const balance = await token.balanceOf(owner.address);
-    const amount = ethers.parseUnits("100", 18);
+    it("is allow to set new owner", async function () {
+      let balance = await token.balanceOf(owner.address);
+      
+      await token.transferOwnership(recipient.address);
 
-    await token.burn(amount);
-  
-    expect(await token.totalSupply()).to.equal(supply - amount);
-    expect(await token.balanceOf(owner.address)).to.equal(balance - amount);
-  });
+      expect(await token.owner()).to.equal(recipient.address);
+      expect(await token.balanceOf(owner.address)).to.equal(0);
+      expect(await token.balanceOf(recipient.address)).to.equal(balance);
+    });
+  }) 
 });
