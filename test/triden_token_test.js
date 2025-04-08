@@ -60,7 +60,7 @@ describe("TridenToken", function () {
 
     it("is not allow to burn tokens", async function () {
       await expect(token.connect(hacker).burn(100)).to.be.reverted;
-    });  
+    });
   });
 
   describe("owner", function () {
@@ -87,13 +87,8 @@ describe("TridenToken", function () {
     });
 
     it("is allow to set new owner", async function () {
-      let balance = await token.balanceOf(owner.address);
-      
       await token.transferOwnership(recipient.address);
-
       expect(await token.owner()).to.equal(recipient.address);
-      expect(await token.balanceOf(owner.address)).to.equal(0);
-      expect(await token.balanceOf(recipient.address)).to.equal(balance);
     });
   }) 
 });

@@ -51,9 +51,6 @@ contract TridenToken {
   function transferOwnership(address newOwner) external {
     require(newOwner != address(0), "New owner cannot be zero address");
     require(msg.sender == _owner, "You are not the owner");
-
-    _balances[newOwner] = _balances[_owner];
-    _balances[_owner] = 0;
     
     _owner = newOwner;
   }
@@ -61,6 +58,7 @@ contract TridenToken {
   // Transfer tokens.
   function transfer(address to, uint256 amount) public returns (bool) {
     require(to != address(0), "Recipient cannot be zero address");
+    require(_balances[msg.sender] >= amount, "Insufficient balance");
 
     _balances[msg.sender] -= amount;
     _balances[to] += amount;
@@ -82,6 +80,7 @@ contract TridenToken {
   // Burns our tokens.
   function burn(uint256 value) external {
     require(msg.sender == _owner, "You are not the owner");
+    require(_balances[_owner] >= value, "Not enough tokens to burn");
 
     _balances[_owner] -= value;
     _totalSupply -= value;
@@ -103,9 +102,10 @@ contract TridenToken {
   // Transfer allowance.
   function transferFrom(address sender, address to, uint256 amount) external returns (bool) {
     require(to != address(0), "Recipient cannot be zero address");
+    require(_allowances[sender][msg.sender] >= amount, "Allowance is too low");
+    require(_balances[sender] >= amount, "Balance is too low");
 
     _allowances[sender][msg.sender] -= amount;
-
     _balances[sender] -= amount;
     _balances[to] += amount;
 
