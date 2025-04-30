@@ -9,8 +9,16 @@ interface IERC20 {
 contract Presale {
   address public owner;
   IERC20 public tridenToken;
+
   bool active;
   bool private locked;
+
+  uint256 public constant WEI = 1e18;
+
+  uint256 tokenPrice;
+  uint256 minAmount;
+
+  event TokensPurchased(address buyer, uint256 ethAmount, uint256 tokenAmount);
 
   modifier noReentrant() {
     require(!locked, "No reentrancy");
@@ -24,28 +32,22 @@ contract Presale {
     _;
   }
 
-  uint256 public constant WEI = 1e18;
-
-  uint256 tokenPrice;
-  uint256 min;
-
-  event TokensPurchased(address buyer, uint256 ethAmount, uint256 tokenAmount);
-
   constructor(address _tridenToken) {
     owner = msg.sender;
     active = true;
     tridenToken = IERC20(_tridenToken);
 
-    // Initially our token price is set to $0.01. Currently ETH price
-    // is around $1780 so 1780 / 0.01 is 178000.
-    tokenPrice = WEI / 178000;
+    // $0.01 USD
+    // ETH price is $1780 / 0.01 = 178000
+    tokenPrice = WEI / 178000; 
 
-    min = 500 * tokenPrice; // ~5 USD
+    // $5 USD
+    minAmount = 500 * tokenPrice; 
   }
 
   receive() external payable noReentrant {
-    require(msg.value >= min, "Not enough ETH");
-    require(active == true, "Presale is currently closed");
+    require(active == true, "Presale is not active");
+    require(msg.value >= minAmount, "Not enough ETH");
 
     uint256 tokens = tokensPerETH(msg.value);
     require(tridenToken.balanceOf(address(this)) >= tokens, "Insufficient tokens");
@@ -66,11 +68,12 @@ contract Presale {
     active = flag;
   }
 
-  function setTokenPrice(uint256 price) external onlyOwner {
+  function setTokenPrice(uint256 price, uint256 min) external onlyOwner {
     require(price > 0, "Token price must be greater than 0");
+    require(min > 0, "Minimum amount must be greater than 0");
 
     tokenPrice = price;
-    min = 500 * price;
+    minAmount = min * price;
   }
 
   function withdrawETH() external onlyOwner {

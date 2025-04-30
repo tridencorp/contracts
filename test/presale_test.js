@@ -8,7 +8,6 @@ describe("Presale", function () {
   let recipient;
   let hacker;
 
-
   // Deploy contracts
   beforeEach(async function () {
     [owner, recipient, hacker] = await ethers.getSigners();
@@ -19,10 +18,11 @@ describe("Presale", function () {
     const Presale = await ethers.getContractFactory("Presale");
     presale = await Presale.deploy(token.target);
 
-    const initialSupply = ethers.parseUnits("50000000", 18); // $500_000
+    const initialSupply = ethers.parseUnits("5000000", 18);
     await token.transfer(presale.target, initialSupply);
   });
 
+  // TODO: split this one
   it("should transfer correct number of tokens", async function () {
     const recipientBalance = await token.balanceOf(recipient.address);
     expect(recipientBalance).to.equal(0);
@@ -34,31 +34,31 @@ describe("Presale", function () {
     expect(await token.balanceOf(recipient.address)).to.equal(178_000);
 
     // Sending less than min amount.
-    value = 1000000000000000000n / 178000n;
+    value = BigInt(1e18) / 178000n;
     await expect(
       recipient.sendTransaction({ to: presale.target, value: value })
     ).to.be.reverted;
 
     // Sending min amount.
-    value = 500n * (1000000000000000000n / 178000n);
+    value = 500n * (BigInt(1e18) / 178000n);
 
     await recipient.sendTransaction({to: presale.target, value: value})
     expect(await token.balanceOf(recipient.address)).to.equal(178_500);    
   });
-  
+
   describe("owner", function () {
     it("is allow to set active flag", async function () {
       await presale.connect(owner).setActive(false);
 
-      let value = ethers.parseEther("1", 18)  
-
       await expect(
-        recipient.sendTransaction({ to: presale.target, value: value })
-      ).to.be.reverted;
+        recipient.sendTransaction({ to: presale.target, value: 0 })
+      ).to.be.revertedWith("Presale is not active");
 
+      let value = ethers.parseEther("1", 18)  
       await presale.connect(owner).setActive(true);
       await recipient.sendTransaction({ to: presale.target, value: value });
 
+      // TODO: Not to be reverted
       expect(await token.balanceOf(recipient.address)).to.equal(178_000);
     });
 
@@ -88,6 +88,16 @@ describe("Presale", function () {
     });
 
     it("is allow to set token price", async function () {
+      // Change token price from $0.01 to $1
+      const price = BigInt(1e18) / 1780n;
+      await presale.connect(owner).setTokenPrice(price, 10);
+
+      let value = BigInt(1e18);
+      await recipient.sendTransaction({ to: presale.target, value: value });
+      expect(await token.balanceOf(recipient.address)).to.equal(1780);
     });
   })
+
+  describe("not owner", function () {
+  });
 });
