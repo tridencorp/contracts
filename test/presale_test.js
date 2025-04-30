@@ -29,12 +29,36 @@ describe("Presale", function () {
     const recipientBalance = await token.balanceOf(recipient.address);
     expect(recipientBalance).to.equal(0);
 
-    await recipient.sendTransaction({
-      to: presale.target,
-      value: ethers.parseEther("1", 18)
-    });
+    // Sending 1 ETH
+    let address = presale.target;
+    let value = ethers.parseEther("1", 18)  
 
+    await recipient.sendTransaction({to: address, value: value});
     expect(await token.balanceOf(recipient.address)).to.equal(178_000);
 
+    // Sending less than min value.
+    value = 1000000000000000000n / 178000n;
+    await expect(recipient.sendTransaction({to: address, value: value})).to.be.reverted;
+
+    // Sending min value.
+    value = 500n * (1000000000000000000n / 178000n);
+
+    await recipient.sendTransaction({to: address, value: value})
+    expect(await token.balanceOf(recipient.address)).to.equal(178_500);    
   });
+  
+  describe("owner", function () {
+    it("is allow to set active flag", async function () {
+      await presale.connect(owner).setActive(false);
+
+      let address = presale.target;
+      let value = ethers.parseEther("1", 18)  
+
+      await expect(recipient.sendTransaction({ to: address, value: value })).to.be.reverted;
+
+      await presale.connect(owner).setActive(true);
+      await recipient.sendTransaction({ to: address, value: value });
+      expect(await token.balanceOf(recipient.address)).to.equal(178_000);
+    });  
+  })
 });

@@ -5,66 +5,65 @@ interface IERC20 {
   function transfer(address to, uint256 amount) external returns (bool);
 }
 
-// TODO: prevent reentrance attack
-
 contract Presale {
-    address public owner;
-    IERC20 public tridenToken;
-    bool active;
+  address public owner;
+  IERC20 public tridenToken;
+  bool active;
 
-    uint256 public constant WEI = 1e18;
-    uint256 public constant MIN = 100;
+  uint256 public constant WEI = 1e18;
 
-    uint256 tokenPrice;
+  uint256 tokenPrice;
+  uint256 min;
 
-    event TokensPurchased(address buyer, uint256 ethAmount, uint256 tokenAmount);
+  event TokensPurchased(address buyer, uint256 ethAmount, uint256 tokenAmount);
 
-    constructor(address _tridenToken) {
-      owner = msg.sender;
-      active = true;
-      tridenToken = IERC20(_tridenToken);
+  constructor(address _tridenToken) {
+    owner = msg.sender;
+    active = true;
+    tridenToken = IERC20(_tridenToken);
 
-      // Initially our token price is set to $0.01. Currently ETH price
-      // is around $1780 so 1780/0.01 is 178_000.
-      tokenPrice = WEI / 178_000;
-    }
+    // Initially our token price is set to $0.01. Currently ETH price
+    // is around $1780 so 1780 / 0.01 is 178000.
+    tokenPrice = WEI / 178000;
 
-    receive() external payable {
-      require(msg.value > 0, "Send ETH to buy tokens");
-      require(active == true, "Presale is currently closed");
+    min = 500 * tokenPrice; // ~5 USD
+  }
 
-      uint256 tokens = tokensPerETH(msg.value);
-      require(tridenToken.transfer(msg.sender, tokens), "Token transfer failed");
+  receive() external payable {
+    require(msg.value >= min, "Not enough ETH");
+    require(active == true, "Presale is currently closed");
 
-      emit TokensPurchased(msg.sender, msg.value, tokens);
-    }
+    uint256 tokens = tokensPerETH(msg.value);
+    require(tridenToken.transfer(msg.sender, tokens), "Token transfer failed");
 
-    fallback() external payable {
-      revert("Unsupported call");
-    }
+    emit TokensPurchased(msg.sender, msg.value, tokens);
+  }
 
-    function tokensPerETH(uint256 amount) public view returns (uint256) {
-      require(amount >= tokenPrice, "Not enough wei");
-      return amount / tokenPrice;
-    }
+  fallback() external payable {
+    revert("Unsupported call");
+  }
 
-    function setActive(bool flag) external {
-      require(msg.sender == owner, "You are not the owner");
-      active = flag;
-    }
+  function tokensPerETH(uint256 amount) public view returns (uint256) {
+    return amount / tokenPrice;
+  }
 
-    function setTokePrice(uint256 price) external {
-      require(msg.sender == owner, "You are not the owner");
-      tokenPrice = price;
-    }
+  function setActive(bool flag) external {
+    require(msg.sender == owner, "You are not the owner");
+    active = flag;
+  }
 
-    function withdrawETH() external {
-      require(msg.sender == owner, "You are not the owner");
-      payable(owner).transfer(address(this).balance);
-    }
+  function setTokePrice(uint256 price) external {
+    require(msg.sender == owner, "You are not the owner");
+    tokenPrice = price;
+  }
 
-    function withdrawTokens(uint256 amount) external {
-      require(msg.sender == owner, "You are not the owner");
-      require(tridenToken.transfer(owner, amount), "Withdraw failed");
-    }
+  function withdrawETH() external {
+    require(msg.sender == owner, "You are not the owner");
+    payable(owner).transfer(address(this).balance);
+  }
+
+  function withdrawTokens(uint256 amount) external {
+    require(msg.sender == owner, "You are not the owner");
+    require(tridenToken.transfer(owner, amount), "Withdraw failed");
+  }
 }
