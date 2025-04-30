@@ -3,12 +3,26 @@ pragma solidity ^0.8.20;
 
 interface IERC20 {
   function transfer(address to, uint256 amount) external returns (bool);
+  function balanceOf(address account) external view returns (uint256);
 }
 
 contract Presale {
   address public owner;
   IERC20 public tridenToken;
   bool active;
+  bool private locked;
+
+  modifier noReentrant() {
+    require(!locked, "No reentrancy");
+    locked = true;
+    _;
+    locked = false;
+  }
+
+  modifier onlyOwner() {
+    require(msg.sender == owner, "You are not the owner");
+    _;
+  }
 
   uint256 public constant WEI = 1e18;
 
@@ -29,11 +43,12 @@ contract Presale {
     min = 500 * tokenPrice; // ~5 USD
   }
 
-  receive() external payable {
+  receive() external payable noReentrant {
     require(msg.value >= min, "Not enough ETH");
     require(active == true, "Presale is currently closed");
 
     uint256 tokens = tokensPerETH(msg.value);
+    require(tridenToken.balanceOf(address(this)) >= tokens, "Insufficient tokens");
     require(tridenToken.transfer(msg.sender, tokens), "Token transfer failed");
 
     emit TokensPurchased(msg.sender, msg.value, tokens);
@@ -47,23 +62,22 @@ contract Presale {
     return amount / tokenPrice;
   }
 
-  function setActive(bool flag) external {
-    require(msg.sender == owner, "You are not the owner");
+  function setActive(bool flag) external onlyOwner {
     active = flag;
   }
 
-  function setTokePrice(uint256 price) external {
-    require(msg.sender == owner, "You are not the owner");
+  function setTokenPrice(uint256 price) external onlyOwner {
+    require(price > 0, "Token price must be greater than 0");
+
     tokenPrice = price;
+    min = 500 * price;
   }
 
-  function withdrawETH() external {
-    require(msg.sender == owner, "You are not the owner");
+  function withdrawETH() external onlyOwner {
     payable(owner).transfer(address(this).balance);
   }
 
-  function withdrawTokens(uint256 amount) external {
-    require(msg.sender == owner, "You are not the owner");
+  function withdrawTokens(uint256 amount) external onlyOwner {
     require(tridenToken.transfer(owner, amount), "Withdraw failed");
   }
 }
