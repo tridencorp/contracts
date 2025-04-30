@@ -8,9 +8,6 @@ describe("Presale", function () {
   let recipient;
   let hacker;
 
-  const tokenPriceInUSDWei = ethers.parseUnits("0.01", 18); // 0.01 USD
-  const ethPriceInUSDWei = ethers.parseUnits("1700", 18); // ETH price in USD
-  const initialSupply = ethers.parseUnits("50000000", 18); // $500k
 
   // Deploy contracts
   beforeEach(async function () {
@@ -22,6 +19,7 @@ describe("Presale", function () {
     const Presale = await ethers.getContractFactory("Presale");
     presale = await Presale.deploy(token.target);
 
+    const initialSupply = ethers.parseUnits("50000000", 18); // $500_000
     await token.transfer(presale.target, initialSupply);
   });
 
@@ -36,11 +34,13 @@ describe("Presale", function () {
     await recipient.sendTransaction({to: address, value: value});
     expect(await token.balanceOf(recipient.address)).to.equal(178_000);
 
-    // Sending less than min value.
+    // Sending less than min amount.
     value = 1000000000000000000n / 178000n;
-    await expect(recipient.sendTransaction({to: address, value: value})).to.be.reverted;
+    await expect(
+      recipient.sendTransaction({ to: address, value: value })
+    ).to.be.reverted;
 
-    // Sending min value.
+    // Sending min amount.
     value = 500n * (1000000000000000000n / 178000n);
 
     await recipient.sendTransaction({to: address, value: value})
@@ -54,11 +54,34 @@ describe("Presale", function () {
       let address = presale.target;
       let value = ethers.parseEther("1", 18)  
 
-      await expect(recipient.sendTransaction({ to: address, value: value })).to.be.reverted;
+      await expect(
+        recipient.sendTransaction({ to: address, value: value })
+      ).to.be.reverted;
 
       await presale.connect(owner).setActive(true);
       await recipient.sendTransaction({ to: address, value: value });
+
       expect(await token.balanceOf(recipient.address)).to.equal(178_000);
-    });  
+    });
+
+    it("is allow to withdraw ETH", async function () {
+      const ownerBalance = await ethers.provider.getBalance(owner.address);
+
+      let address = presale.target;
+      let value = ethers.parseEther("1", 18)  
+      await recipient.sendTransaction({ to: address, value: value });
+
+      await presale.connect(owner).withdrawETH();
+
+      const newBalance = await ethers.provider.getBalance(owner.address);
+      console.log(newBalance - ownerBalance);
+      expect(ownerBalance).to.be.lessThan(newBalance);
+    });
+
+    it("is allow to withdraw tokens", async function () {
+    });
+
+    it("is allow to set token price", async function () {
+    });
   })
 });
