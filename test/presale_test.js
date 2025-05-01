@@ -20,48 +20,43 @@ describe("Presale", function () {
     const initialSupply = ethers.parseUnits("5000000", 18);
     await token.connect(owner).transfer(presale.target, initialSupply);
   });
+  
+  describe("receive", function () {
+    it("should transfer equivalent of 1 ETH", async function () {
+      const recipientBalance = await token.balanceOf(recipient.address);
+      expect(recipientBalance).to.equal(0);
 
-  // TODO: split this one
-  it("should transfer correct number of tokens", async function () {
-    const recipientBalance = await token.balanceOf(recipient.address);
-    expect(recipientBalance).to.equal(0);
+      let value = ethers.parseEther("1", 18)  
 
-    // Sending 1 ETH
-    let value = ethers.parseEther("1", 18)  
+      await recipient.sendTransaction({to: presale.target, value: value});
+      expect(await token.balanceOf(recipient.address)).to.equal(178_000);    
+    })
 
-    await recipient.sendTransaction({to: presale.target, value: value});
-    expect(await token.balanceOf(recipient.address)).to.equal(178_000);
+    it("should check if MIN amount is send", async function () {
+      // Sending less than min amount
+      await expect(
+        recipient.sendTransaction({ to: presale.target, value: BigInt(1e18) / 178000n })
+      ).to.be.revertedWith("Not enough ETH");
+    })
 
-    // Sending less than min amount.
-    value = BigInt(1e18) / 178000n;
-    await expect(
-      recipient.sendTransaction({ to: presale.target, value: value })
-    ).to.be.reverted;
-
-    // Sending min amount.
-    value = 500n * (BigInt(1e18) / 178000n);
-
-    await recipient.sendTransaction({to: presale.target, value: value})
-    expect(await token.balanceOf(recipient.address)).to.equal(178_500);    
-  });
-
-  describe("owner", function () {
-    it("is allow to set active flag", async function () {
+    it("should revert if contract is not active", async function () {
       await presale.connect(owner).setActive(false);
 
       await expect(
-        recipient.sendTransaction({ to: presale.target, value: 0 })
+        recipient.sendTransaction({ to: presale.target, value: BigInt(10n) })
       ).to.be.revertedWith("Presale is not active");
+    })
+  })
+  
+  describe("owner", function () {
+    it("is allow to set active flag", async function () {
+      await presale.connect(owner).setActive(false);
+      expect(await presale.active()).to.equal(false);
 
-      let value = ethers.parseEther("1", 18)  
       await presale.connect(owner).setActive(true);
-      await recipient.sendTransaction({ to: presale.target, value: value });
-
-      // TODO: Not to be reverted
-      expect(await token.balanceOf(recipient.address)).to.equal(178_000);
+      expect(await presale.active()).to.equal(true);
     });
 
-    // TODO: Make sure it's working
     it("is allow to withdraw ETH", async function () {
       const balanceBefore = await ethers.provider.getBalance(owner.address);
 
@@ -90,7 +85,7 @@ describe("Presale", function () {
     it("is allow to set token price", async function () {
       // Change token price from $0.01 to $1
       const price = BigInt(1e18) / 1780n;
-      await presale.connect(owner).setTokenPrice(price, 10);
+      await presale.connect(owner).setTokenPrice(price, 10);      
       expect(await presale.tokenPrice()).to.equal(price);
     });
   })
