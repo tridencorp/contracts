@@ -10,12 +10,12 @@ contract Presale {
   address public owner;
   IERC20 public tridenToken;
 
-  bool active;
+  bool public active;
   bool private locked;
 
-  uint256 public constant WEI = 1e18;
+  uint256 constant WEI = 1e18;
 
-  uint256 tokenPrice;
+  uint256 public tokenPrice;
   uint256 minAmount;
 
   event TokensPurchased(address buyer, uint256 ethAmount, uint256 tokenAmount);
@@ -39,10 +39,10 @@ contract Presale {
 
     // $0.01 USD
     // ETH price is $1780 / 0.01 = 178000
-    tokenPrice = WEI / 178000; 
+    tokenPrice = WEI / 178000;
 
     // $5 USD
-    minAmount = 500 * tokenPrice; 
+    minAmount = 500 * tokenPrice;
   }
 
   receive() external payable noReentrant {

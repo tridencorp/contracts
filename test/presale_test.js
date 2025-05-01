@@ -6,11 +6,10 @@ describe("Presale", function () {
   let presale;
   let owner;
   let recipient;
-  let hacker;
 
   // Deploy contracts
   beforeEach(async function () {
-    [owner, recipient, hacker] = await ethers.getSigners();
+    [owner, recipient] = await ethers.getSigners();
 
     const TridenToken = await ethers.getContractFactory("TridenToken", owner);
     token = await TridenToken.deploy();
@@ -19,7 +18,7 @@ describe("Presale", function () {
     presale = await Presale.deploy(token.target);
 
     const initialSupply = ethers.parseUnits("5000000", 18);
-    await token.transfer(presale.target, initialSupply);
+    await token.connect(owner).transfer(presale.target, initialSupply);
   });
 
   // TODO: split this one
@@ -62,6 +61,7 @@ describe("Presale", function () {
       expect(await token.balanceOf(recipient.address)).to.equal(178_000);
     });
 
+    // TODO: Make sure it's working
     it("is allow to withdraw ETH", async function () {
       const balanceBefore = await ethers.provider.getBalance(owner.address);
 
@@ -98,6 +98,23 @@ describe("Presale", function () {
     });
   })
 
-  describe("not owner", function () {
+  describe("not an owner", function () {
+    it("is not allow to set token price", async function () {
+      await expect(
+        presale.connect(recipient).setTokenPrice(1000n, 10)
+      ).to.be.revertedWith("You are not the owner");
+    });
+
+    it("is not allow withdraw ETH", async function () {
+      await expect(
+        presale.connect(recipient).withdrawETH()
+      ).to.be.revertedWith("You are not the owner");
+    });
+
+    it("is not allow withdraw tokens", async function () {
+      await expect(
+        presale.connect(recipient).withdrawTokens(10n)
+      ).to.be.revertedWith("You are not the owner");
+    });
   });
 });
