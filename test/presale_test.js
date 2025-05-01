@@ -108,5 +108,11 @@ describe("Presale", function () {
         presale.connect(recipient).withdrawTokens(10n)
       ).to.be.revertedWith("You are not the owner");
     });
+
+    it("is not allow to set active flag", async function () {
+      await expect(
+        presale.connect(recipient).setActive(false)
+      ).to.be.revertedWith("You are not the owner");
+    });
   });
 });
