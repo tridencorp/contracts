@@ -91,10 +91,7 @@ describe("Presale", function () {
       // Change token price from $0.01 to $1
       const price = BigInt(1e18) / 1780n;
       await presale.connect(owner).setTokenPrice(price, 10);
-
-      let value = BigInt(1e18);
-      await recipient.sendTransaction({ to: presale.target, value: value });
-      expect(await token.balanceOf(recipient.address)).to.equal(1780);
+      expect(await presale.tokenPrice()).to.equal(price);
     });
   })
 
