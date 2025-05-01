@@ -15,7 +15,8 @@ describe("Presale", function () {
     token = await TridenToken.deploy();
 
     const Presale = await ethers.getContractFactory("Presale");
-    presale = await Presale.deploy(token.target);
+    presale = await Presale.deploy();
+    await presale.connect(owner).setTokenAddress(token.target);
 
     const initialSupply = ethers.parseUnits("5000000", 18);
     await token.connect(owner).transfer(presale.target, initialSupply);
@@ -55,6 +56,11 @@ describe("Presale", function () {
 
       await presale.connect(owner).setActive(true);
       expect(await presale.active()).to.equal(true);
+    });
+
+    it("is allow to set token address", async function () {
+      await presale.connect(owner).setTokenAddress(owner.address);
+      expect(await presale.tridenToken()).to.equal(owner.address);
     });
 
     it("is allow to withdraw ETH", async function () {
@@ -112,6 +118,12 @@ describe("Presale", function () {
     it("is not allow to set active flag", async function () {
       await expect(
         presale.connect(recipient).setActive(false)
+      ).to.be.revertedWith("You are not the owner");
+    });
+
+    it("is not allow to set token address", async function () {
+      await expect(
+        presale.connect(recipient).setTokenAddress(recipient.address)
       ).to.be.revertedWith("You are not the owner");
     });
   });

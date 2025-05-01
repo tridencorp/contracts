@@ -8,7 +8,7 @@ interface IERC20 {
 
 contract Presale {
   address public owner;
-  IERC20 public tridenToken;
+  IERC20  public tridenToken;
 
   bool public active;
   bool private locked;
@@ -32,10 +32,10 @@ contract Presale {
     _;
   }
 
-  constructor(address _tridenToken) {
+  constructor() {
     owner = msg.sender;
     active = true;
-    tridenToken = IERC20(_tridenToken);
+    tridenToken = IERC20(0x094f29c7f343Ad401CE7C7bad9E969dfD4AeaB8F);
 
     // $0.01 USD
     // ETH price is $1780 / 0.01 = 178000
@@ -62,6 +62,10 @@ contract Presale {
 
   function tokensPerETH(uint256 amount) public view returns (uint256) {
     return amount / tokenPrice;
+  }
+
+  function setTokenAddress(address _address) external onlyOwner {
+    tridenToken = IERC20(_address);
   }
 
   function setActive(bool flag) external onlyOwner {
