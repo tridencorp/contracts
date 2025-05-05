@@ -17,7 +17,7 @@ contract Presale is ReentrancyGuard {
   uint256 constant WEI = 1e18;
 
   uint256 public tokenPrice;
-  uint256 minAmount;
+  uint256 public minAmount;
 
   event TokensPurchased(address buyer, uint256 ethAmount, uint256 tokenAmount);
 
