@@ -27,17 +27,29 @@ describe("Presale", function () {
       const recipientBalance = await token.balanceOf(recipient.address);
       expect(recipientBalance).to.equal(0);
 
-      let value = ethers.parseEther("1", 18)  
+      let value = ethers.parseEther("1", 18);
 
-      await recipient.sendTransaction({to: presale.target, value: value});
-      expect(await token.balanceOf(recipient.address)).to.equal(178_000);    
+      await recipient.sendTransaction({ to: presale.target, value: value });
+      const expected = ethers.parseUnits("200000", 18);
+      expect(await token.balanceOf(recipient.address)).to.equal(expected);          
+    })
+
+    it("should transfer proper value", async function () {
+      const recipientBalance = await token.balanceOf(recipient.address);
+      expect(recipientBalance).to.equal(0);
+
+      let value = ethers.parseEther("0.03", 18);
+
+      await recipient.sendTransaction({ to: presale.target, value: value });
+      const expected = ethers.parseEther("6000", 18);
+      expect(await token.balanceOf(recipient.address)).to.equal(expected);          
     })
 
     it("should check if MIN amount is send", async function () {
       // Sending less than min amount
       await expect(
-        recipient.sendTransaction({ to: presale.target, value: BigInt(1e18) / 178000n })
-      ).to.be.revertedWith("Not enough ETH");
+        recipient.sendTransaction({ to: presale.target, value: BigInt(1e18) / 200000n })
+      ).to.be.revertedWith("Below minimum amount");
     })
 
     it("should revert if contract is not active", async function () {
@@ -48,7 +60,7 @@ describe("Presale", function () {
       ).to.be.revertedWith("Presale is not active");
     })
   })
-  
+
   describe("owner", function () {
     it("is allow to set active flag", async function () {
       await presale.connect(owner).setActive(false);
@@ -59,8 +71,8 @@ describe("Presale", function () {
     });
 
     it("is allow to set token address", async function () {
-      await presale.connect(owner).setTokenAddress(owner.address);
-      expect(await presale.tridenToken()).to.equal(owner.address);
+      await presale.connect(owner).setTokenAddress(recipient.address);
+      expect(await presale.token()).to.equal(recipient.address);
     });
 
     it("is allow to withdraw ETH", async function () {
@@ -90,7 +102,7 @@ describe("Presale", function () {
 
     it("is allow to set token price", async function () {
       // Change token price from $0.01 to $1
-      const price = BigInt(1e18) / 1780n;
+      const price = BigInt(1e18) / 2000n;
       await presale.connect(owner).setTokenPrice(price, 10);      
       expect(await presale.tokenPrice()).to.equal(price);
     });

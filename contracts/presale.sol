@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
 interface IERC20 {
   function transfer(address to, uint256 amount) external returns (bool);
   function balanceOf(address account) external view returns (uint256);
 }
 
-contract Presale {
+contract Presale is ReentrancyGuard {
   address public owner;
-  IERC20  public tridenToken;
+  IERC20  public token;
 
   bool public active;
   bool private locked;
@@ -20,13 +22,6 @@ contract Presale {
 
   event TokensPurchased(address buyer, uint256 ethAmount, uint256 tokenAmount);
 
-  modifier noReentrant() {
-    require(!locked, "No reentrancy");
-    locked = true;
-    _;
-    locked = false;
-  }
-
   modifier onlyOwner() {
     require(msg.sender == owner, "You are not the owner");
     _;
@@ -35,23 +30,19 @@ contract Presale {
   constructor() {
     owner = msg.sender;
     active = true;
-    tridenToken = IERC20(0x094f29c7f343Ad401CE7C7bad9E969dfD4AeaB8F);
+    token = IERC20(0x094f29c7f343Ad401CE7C7bad9E969dfD4AeaB8F);
 
-    // $0.01 USD
-    // ETH price is $1780 / 0.01 = 178000
-    tokenPrice = WEI / 178000;
-
-    // $5 USD
+    tokenPrice = WEI / 200000;
     minAmount = 500 * tokenPrice;
   }
 
-  receive() external payable noReentrant {
-    require(active == true, "Presale is not active");
-    require(msg.value >= minAmount, "Not enough ETH");
+  receive() external payable nonReentrant {
+    require(active, "Presale is not active");
+    require(msg.value >= minAmount, "Below minimum amount");
 
     uint256 tokens = tokensPerETH(msg.value);
-    require(tridenToken.balanceOf(address(this)) >= tokens, "Insufficient tokens");
-    require(tridenToken.transfer(msg.sender, tokens), "Token transfer failed");
+    require(token.balanceOf(address(this)) >= tokens, "Insufficient tokens");
+    require(token.transfer(msg.sender, tokens), "Token transfer failed");
 
     emit TokensPurchased(msg.sender, msg.value, tokens);
   }
@@ -61,11 +52,11 @@ contract Presale {
   }
 
   function tokensPerETH(uint256 amount) public view returns (uint256) {
-    return amount / tokenPrice;
+    return (amount * WEI) / tokenPrice;
   }
 
   function setTokenAddress(address _address) external onlyOwner {
-    tridenToken = IERC20(_address);
+    token = IERC20(_address);
   }
 
   function setActive(bool flag) external onlyOwner {
@@ -85,6 +76,6 @@ contract Presale {
   }
 
   function withdrawTokens(uint256 amount) external onlyOwner {
-    require(tridenToken.transfer(owner, amount), "Withdraw failed");
+    require(token.transfer(owner, amount), "Withdraw failed");
   }
 }
