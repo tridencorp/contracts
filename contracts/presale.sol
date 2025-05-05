@@ -13,7 +13,6 @@ contract Presale is ReentrancyGuard {
   IERC20  public token;
 
   bool public active;
-  bool private locked;
 
   uint256 constant WEI = 1e18;
 
@@ -52,7 +51,7 @@ contract Presale is ReentrancyGuard {
   }
 
   function tokensPerETH(uint256 amount) public view returns (uint256) {
-    return (amount * WEI) / tokenPrice;
+    return amount / tokenPrice;
   }
 
   function setTokenAddress(address _address) external onlyOwner {

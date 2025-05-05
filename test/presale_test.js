@@ -30,8 +30,7 @@ describe("Presale", function () {
       let value = ethers.parseEther("1", 18);
 
       await recipient.sendTransaction({ to: presale.target, value: value });
-      const expected = ethers.parseUnits("200000", 18);
-      expect(await token.balanceOf(recipient.address)).to.equal(expected);          
+      expect(await token.balanceOf(recipient.address)).to.equal(200000);          
     })
 
     it("should transfer proper value", async function () {
@@ -41,8 +40,7 @@ describe("Presale", function () {
       let value = ethers.parseEther("0.03", 18);
 
       await recipient.sendTransaction({ to: presale.target, value: value });
-      const expected = ethers.parseEther("6000", 18);
-      expect(await token.balanceOf(recipient.address)).to.equal(expected);          
+      expect(await token.balanceOf(recipient.address)).to.equal(6000);          
     })
 
     it("should check if MIN amount is send", async function () {
