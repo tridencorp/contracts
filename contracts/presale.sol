@@ -51,7 +51,7 @@ contract Presale is ReentrancyGuard {
   }
 
   function tokensPerETH(uint256 amount) public view returns (uint256) {
-    return amount / tokenPrice;
+    return (amount * WEI) / tokenPrice;
   }
 
   function setTokenAddress(address _address) external onlyOwner {

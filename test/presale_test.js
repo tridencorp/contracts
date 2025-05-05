@@ -18,8 +18,8 @@ describe("Presale", function () {
     presale = await Presale.deploy();
     await presale.connect(owner).setTokenAddress(token.target);
 
-    const initialSupply = ethers.parseUnits("5000000", 18);
-    await token.connect(owner).transfer(presale.target, initialSupply);
+    let value = ethers.parseEther("50000000", 18);
+    await token.connect(owner).transfer(presale.target, value);
   });
   
   describe("receive", function () {
@@ -28,9 +28,10 @@ describe("Presale", function () {
       expect(recipientBalance).to.equal(0);
 
       let value = ethers.parseEther("1", 18);
-
       await recipient.sendTransaction({ to: presale.target, value: value });
-      expect(await token.balanceOf(recipient.address)).to.equal(200000);          
+
+      let expected = ethers.parseEther("200000", 18);
+      expect(await token.balanceOf(recipient.address)).to.equal(expected);          
     })
 
     it("should transfer proper value", async function () {
@@ -40,7 +41,9 @@ describe("Presale", function () {
       let value = ethers.parseEther("0.03", 18);
 
       await recipient.sendTransaction({ to: presale.target, value: value });
-      expect(await token.balanceOf(recipient.address)).to.equal(6000);          
+
+      let expected = ethers.parseEther("6000", 18);
+      expect(await token.balanceOf(recipient.address)).to.equal(expected);
     })
 
     it("should check if MIN amount is send", async function () {
